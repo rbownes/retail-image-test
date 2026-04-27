@@ -23,6 +23,7 @@ from overlay.critique import critique_image
 from overlay.generate import generate_image
 from overlay.placement import decide_placement
 from overlay.render import render_overlay
+from overlay.templates import load_template
 
 
 def _run_one(
@@ -40,11 +41,16 @@ def _run_one(
     prompt = scenario["prompt"]
     copy = scenario["copy"]
     copy_zone = scenario.get("copy_zone")
+    template_id = scenario.get("template")
+    template = load_template(template_id) if template_id else None
     out_dir = out_root / sid
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    if template is not None:
+        copy_zone = copy_zone or template.copy_zone
+
     print(f"\n=== {theme} ({sid}) ===")
-    print(f"copy: {copy!r}  zone: {copy_zone or '(none)'}")
+    print(f"copy: {copy!r}  template: {template_id or '(none)'}  zone: {copy_zone or '(none)'}")
 
     started = time.time()
     image = None
@@ -63,6 +69,7 @@ def _run_one(
                 quality=quality,
                 label=f"{sid}-gen-{i + 1}",
                 copy_zone=copy_zone,
+                template_directive=template.gen_directive if template else None,
             )
         except Exception as e:
             print(f"    !! generation failed: {type(e).__name__}: {e}")
@@ -103,8 +110,18 @@ def _run_one(
     image.save(out_dir / "raw.png")
 
     print("  [place]")
+    template_region = None
+    if template and "headline" in template.regions:
+        r = template.regions["headline"]
+        template_region = (r.x, r.y, r.w, r.h)
     try:
-        spec = decide_placement(image, copy, preferred_zone=copy_zone)
+        spec = decide_placement(
+            image,
+            copy,
+            preferred_zone=copy_zone,
+            template_hint=(template.placement_hint if template else None),
+            template_region=template_region,
+        )
     except Exception as e:
         print(f"    !! placement failed: {type(e).__name__}: {e}")
         return {
@@ -121,7 +138,7 @@ def _run_one(
     )
 
     print("  [render]")
-    final = render_overlay(image, copy, spec)
+    final = render_overlay(image, copy, spec, template=template)
     final_path = out_dir / "final.png"
     final.save(final_path)
     print(f"  done -> {final_path}")

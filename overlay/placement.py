@@ -95,10 +95,24 @@ def decide_placement(
     copy: str,
     client: anthropic.Anthropic | None = None,
     preferred_zone: str | None = None,
+    template_hint: str | None = None,
+    template_region: tuple[float, float, float, float] | None = None,
 ) -> PlacementSpec:
     client = client or anthropic.Anthropic()
     b64 = _image_to_b64_png(image)
-    zone_hint = _ZONE_HINTS.get(preferred_zone or "", "")
+
+    hints: list[str] = []
+    if template_hint:
+        hints.append(template_hint)
+        if template_region:
+            x, y, w, h = template_region
+            hints.append(
+                f"Template-specified copy region (normalized): x={x:.2f}, y={y:.2f}, w={w:.2f}, h={h:.2f}. "
+                f"Use this exactly unless the actual rendered image makes it unusable."
+            )
+    elif zone_h := _ZONE_HINTS.get(preferred_zone or ""):
+        hints.append(zone_h)
+    zone_hint = "\n\n".join(hints)
 
     response = client.messages.parse(
         model=_MODEL,

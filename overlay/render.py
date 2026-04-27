@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from overlay.placement import PlacementSpec
+from overlay.templates import Template
 
 _PACKAGED_FONT = Path(__file__).parent / "fonts" / "Inter-Bold.otf"
 
@@ -83,6 +84,7 @@ def render_overlay(
     copy: str,
     spec: PlacementSpec,
     font_path: str | None = None,
+    template: Template | None = None,
 ) -> Image.Image:
     base = image.convert("RGBA")
     W, H = base.size
@@ -122,23 +124,65 @@ def render_overlay(
             return box_x + (box_w - line_w)
         return box_x
 
-    if spec.needs_scrim:
-        mask = Image.new("L", base.size, 0)
-        mdraw = ImageDraw.Draw(mask)
-        for i, line in enumerate(lines):
-            mdraw.text((_line_x(line), anchor_y + i * line_step), line, font=font, fill=255)
+    scrim_shape = "halo"
+    scrim_color = spec.scrim_color
+    scrim_opacity = spec.scrim_opacity
+    if template is not None and template.typography.scrim is not None:
+        scrim_shape = template.typography.scrim.shape
+        if template.typography.scrim.color:
+            scrim_color = template.typography.scrim.color
+        scrim_opacity = template.typography.scrim.opacity
 
-        dilate_size = max(3, int(initial_size * 0.05) | 1)
-        mask = mask.filter(ImageFilter.MaxFilter(size=dilate_size))
-        blur_radius = max(8, int(initial_size * 0.45))
-        mask = mask.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    needs_scrim = spec.needs_scrim or (
+        template is not None and template.typography.scrim and scrim_opacity > 0.0
+    )
 
-        opacity = max(0.0, min(1.0, spec.scrim_opacity))
-        alpha = mask.point(lambda v, o=opacity: int(v * o))
-        scrim_rgb = _hex_to_rgb(spec.scrim_color)
-        halo = Image.new("RGBA", base.size, (*scrim_rgb, 0))
-        halo.putalpha(alpha)
-        overlay = Image.alpha_composite(overlay, halo)
+    if needs_scrim and scrim_opacity > 0.0:
+        scrim_rgb = _hex_to_rgb(scrim_color)
+
+        if scrim_shape == "full-band" and template is not None and "headline" in template.regions:
+            r = template.regions["headline"]
+            band = (
+                int(r.x * W),
+                int(r.y * H),
+                int((r.x + r.w) * W),
+                int((r.y + r.h) * H),
+            )
+            band_alpha = int(round(scrim_opacity * 255))
+            band_layer = Image.new("RGBA", base.size, (0, 0, 0, 0))
+            ImageDraw.Draw(band_layer).rectangle(band, fill=(*scrim_rgb, band_alpha))
+            overlay = Image.alpha_composite(overlay, band_layer)
+
+        elif scrim_shape == "rounded-block":
+            pad_x = max(12, int(0.02 * W))
+            pad_y = max(10, int(0.015 * H))
+            rect = (
+                _line_x(min(lines, key=lambda l: -font.getlength(l))) - pad_x,
+                anchor_y - pad_y,
+                box_x + box_w + pad_x,
+                anchor_y + (line_step * len(lines)) + pad_y,
+            )
+            block = Image.new("RGBA", base.size, (0, 0, 0, 0))
+            radius = max(8, int(0.014 * H))
+            ImageDraw.Draw(block).rounded_rectangle(
+                rect, radius=radius, fill=(*scrim_rgb, int(round(scrim_opacity * 255)))
+            )
+            overlay = Image.alpha_composite(overlay, block)
+
+        else:
+            mask = Image.new("L", base.size, 0)
+            mdraw = ImageDraw.Draw(mask)
+            for i, line in enumerate(lines):
+                mdraw.text((_line_x(line), anchor_y + i * line_step), line, font=font, fill=255)
+            dilate_size = max(3, int(initial_size * 0.05) | 1)
+            mask = mask.filter(ImageFilter.MaxFilter(size=dilate_size))
+            blur_radius = max(8, int(initial_size * 0.45))
+            mask = mask.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+            opacity = max(0.0, min(1.0, scrim_opacity))
+            alpha = mask.point(lambda v, o=opacity: int(v * o))
+            halo = Image.new("RGBA", base.size, (*scrim_rgb, 0))
+            halo.putalpha(alpha)
+            overlay = Image.alpha_composite(overlay, halo)
 
     shadow = Image.new("RGBA", base.size, (0, 0, 0, 0))
     sdraw = ImageDraw.Draw(shadow)

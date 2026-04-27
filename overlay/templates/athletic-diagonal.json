@@ -1,0 +1,21 @@
+{
+  "id": "athletic-diagonal",
+  "name": "Athletic Diagonal",
+  "brands": ["Slazenger", "Karrimor technical", "Everlast", "USC Pro", "Evans Cycles performance"],
+  "description": "Performance hero. Athlete in motion cuts diagonally bottom-left to top-right. Headline anchored bottom-left, brand wordmark top-left, optional product callout bottom-right.",
+  "regions": {
+    "subject": {"x": 0.20, "y": 0.10, "w": 0.70, "h": 0.70},
+    "headline": {"x": 0.04, "y": 0.65, "w": 0.50, "h": 0.25},
+    "wordmark": {"x": 0.04, "y": 0.04, "w": 0.20, "h": 0.08},
+    "accent": {"x": 0.70, "y": 0.70, "w": 0.26, "h": 0.25}
+  },
+  "gen_directive": "Composition: an athlete in motion cuts diagonally across the frame from bottom-left to top-right (running, jumping, mid-strike). The bottom-left corner area must be visually quiet to host a 2-line all-caps headline. The top-left corner must be quiet for a brand wordmark. Single dominant brand color flooded as a triangular wedge from one corner (red, yellow, electric blue). Subject duotone or dramatic single-source rim-lighting against a dark or moody background. Aggressive, kinetic.",
+  "copy_zone": "bottom-left",
+  "typography": {
+    "alignment": "left",
+    "font_size_pct": 9.0,
+    "color_hint": "#FFFFFF",
+    "scrim": {"shape": "halo", "color": "#000000", "opacity": 0.50}
+  },
+  "placement_hint": "This image was composed to the 'Athletic Diagonal' template. The headline lives in the bottom-left area (roughly x=0.04, y=0.65, w=0.50, h=0.25), left-aligned, all-caps, 2 lines max. font_size_pct around 8-10. Tight line-height. Use white text with a moderate dark halo scrim if the underlying area has any texture. The headline must align with the diagonal energy — never extend past the visual midline."
+}

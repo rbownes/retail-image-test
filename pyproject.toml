@@ -27,4 +27,4 @@ where = ["."]
 include = ["overlay*"]
 
 [tool.setuptools.package-data]
-overlay = ["fonts/*.ttf", "fonts/*.otf"]
+overlay = ["fonts/*.ttf", "fonts/*.otf", "templates/*.json"]

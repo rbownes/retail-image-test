@@ -1,0 +1,21 @@
+{
+  "id": "value-slab",
+  "name": "Value Slab",
+  "brands": ["Sports Direct", "Lonsdale", "Slazenger value", "Studio"],
+  "description": "High-energy mass-market promo. Subject right of center, full-width headline slab at bottom, wordmark top-right, optional price flash top-left.",
+  "regions": {
+    "subject": {"x": 0.20, "y": 0.05, "w": 0.70, "h": 0.70},
+    "headline": {"x": 0.0, "y": 0.80, "w": 1.0, "h": 0.20},
+    "wordmark": {"x": 0.75, "y": 0.04, "w": 0.20, "h": 0.10},
+    "accent": {"x": 0.05, "y": 0.05, "w": 0.20, "h": 0.20}
+  },
+  "gen_directive": "Composition: subject (athlete cutout, hero product, or model) occupies the center-right portion of the frame, bleeding toward bottom-right. Reserve the bottom 20% as a clean uniform band for a full-width headline slab — no subject or busy detail in that band. Reserve the top-right corner for a brand wordmark area. High-contrast palette: deep navy (#1B1F3B) and saturated yellow (#FFE800) with red accents. Crisp sharp lighting, premium-but-aggressive sports retail vibe.",
+  "copy_zone": "bottom",
+  "typography": {
+    "alignment": "center",
+    "font_size_pct": 11.0,
+    "color_hint": "#FFFFFF",
+    "scrim": {"shape": "full-band", "color": "#1B1F3B", "opacity": 0.85}
+  },
+  "placement_hint": "This image was composed to the 'Value Slab' template. The headline MUST sit as a full-width band across the bottom 20% of the frame (y from 0.80 to 1.0). Use bold centered white text, font_size_pct around 11, with a near-opaque navy scrim spanning the entire band. Override only if the bottom 20% is genuinely unusable in this generation."
+}

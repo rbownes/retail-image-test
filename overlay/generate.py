@@ -25,13 +25,15 @@ _ZONE_DIRECTIVES = {
 }
 
 
-def _augment_prompt(prompt: str, copy_zone: CopyZone | None) -> str:
-    if not copy_zone:
-        return prompt
-    directive = _ZONE_DIRECTIVES.get(copy_zone)
-    if not directive:
-        return prompt
-    return f"{prompt}\n\nComposition note: {directive}"
+def _augment_prompt(
+    prompt: str, copy_zone: CopyZone | None, template_directive: str | None = None
+) -> str:
+    parts = [prompt]
+    if template_directive:
+        parts.append(f"Composition note: {template_directive}")
+    elif copy_zone and (directive := _ZONE_DIRECTIVES.get(copy_zone)):
+        parts.append(f"Composition note: {directive}")
+    return "\n\n".join(parts)
 
 _PIPELINE = None
 _PIPELINE_KEY: tuple | None = None
@@ -152,8 +154,9 @@ def generate_image(
     quality: Quality = "medium",
     label: str = "image-gen",
     copy_zone: CopyZone | None = None,
+    template_directive: str | None = None,
 ) -> Image.Image:
-    augmented = _augment_prompt(prompt, copy_zone)
+    augmented = _augment_prompt(prompt, copy_zone, template_directive)
     if provider == "local":
         return _generate_local(
             prompt=augmented,

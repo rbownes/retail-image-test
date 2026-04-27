@@ -1,0 +1,21 @@
+{
+  "id": "streetwear-stack",
+  "name": "Streetwear Stack",
+  "brands": ["USC", "Sports Direct athleisure", "Jack Wills youth", "FIRETRAP", "Karrimor lifestyle"],
+  "description": "Youth-oriented stacked-headline tile. Subject(s) middle row, multi-line headline upper-left, CTA pill bottom-right.",
+  "regions": {
+    "subject": {"x": 0.15, "y": 0.30, "w": 0.70, "h": 0.55},
+    "headline": {"x": 0.04, "y": 0.06, "w": 0.50, "h": 0.30},
+    "wordmark": {"x": 0.04, "y": 0.04, "w": 0.18, "h": 0.06},
+    "accent": {"x": 0.65, "y": 0.85, "w": 0.30, "h": 0.10}
+  },
+  "gen_directive": "Composition: one or two models (knee-cropped or three-quarter) occupy the middle row of the frame, set against a flat colored backdrop wall (sage, butter, terracotta, or washed primary). The upper-left quadrant must be visually quiet for a multi-line stacked headline. The lower-right corner must be quiet for a CTA pill. Slight 35mm grain texture, slightly desaturated. Streetwear youth aesthetic — confident, casual, anti-corporate.",
+  "copy_zone": "top-left",
+  "typography": {
+    "alignment": "left",
+    "font_size_pct": 7.0,
+    "color_hint": "#FFFFFF",
+    "scrim": {"shape": "halo", "color": "#000000", "opacity": 0.35}
+  },
+  "placement_hint": "This image was composed to the 'Streetwear Stack' template. The headline lives in the upper-left quadrant (roughly x=0.04, y=0.06, w=0.50, h=0.30), left-aligned, ideally broken into a stack of short lines (each on its own row). font_size_pct around 6-8. Use white text if the backdrop is mid-toned, soft drop-shadow or light halo scrim. The headline must NOT cross into the middle row where subjects sit."
+}

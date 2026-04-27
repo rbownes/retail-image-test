@@ -1,0 +1,21 @@
+{
+  "id": "editorial-hush",
+  "name": "Editorial Hush",
+  "brands": ["Flannels", "Frasers", "House of Fraser premium", "Jack Wills heritage"],
+  "description": "Luxury editorial. Single subject vertical center, generous negative space, small wordmark, optional small headline bottom-right.",
+  "regions": {
+    "subject": {"x": 0.30, "y": 0.05, "w": 0.40, "h": 0.90},
+    "headline": {"x": 0.62, "y": 0.62, "w": 0.33, "h": 0.20},
+    "wordmark": {"x": 0.42, "y": 0.04, "w": 0.16, "h": 0.06},
+    "accent": {"x": 0.05, "y": 0.05, "w": 0.20, "h": 0.20}
+  },
+  "gen_directive": "Composition: a single subject occupies the vertical center column, full body in frame, with vast generous negative space (>50% of the canvas should be empty). Subject sits roughly centered horizontally. The top-right and bottom-left quadrants must be unbusy — soft uniform background, clean wall, minimal texture. Monochrome palette: bone, charcoal, ink black, with optional subtle desaturation. High-contrast minimal editorial photography, magazine-spread restraint.",
+  "copy_zone": "bottom-right",
+  "typography": {
+    "alignment": "left",
+    "font_size_pct": 4.5,
+    "color_hint": "#1A1A1A",
+    "scrim": {"shape": "halo", "color": "#FFFFFF", "opacity": 0.0}
+  },
+  "placement_hint": "This image was composed to the 'Editorial Hush' template. The headline should sit small in the lower-right area (roughly x=0.62, y=0.62, w=0.33, h=0.20), left-aligned, restrained. font_size_pct around 4-5 (NOT large). No scrim — the negative space is the design; if the chosen region needs scrim to read, the image failed and should be regenerated. Color should be deep ink (#1A1A1A) on a light background, or bone/cream (#F2EDE5) on a dark one. Tracking should feel airy."
+}

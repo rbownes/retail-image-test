@@ -12,6 +12,7 @@ from overlay.critique import ImageCritique, critique_image
 from overlay.generate import generate_image
 from overlay.placement import decide_placement
 from overlay.render import render_overlay
+from overlay.templates import load_template, template_ids
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -54,6 +55,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Reserve a quiet zone for copy: bias both the generator and the placement agent toward this region.",
     )
     p.add_argument(
+        "--template",
+        choices=template_ids(),
+        default=None,
+        help="Brand layout template (overrides --copy-zone if set). Available: " + ", ".join(template_ids()),
+    )
+    p.add_argument(
         "--max-iterations",
         type=int,
         default=5,
@@ -91,6 +98,8 @@ def _iterate(args) -> tuple[Image.Image, str, list[ImageCritique]]:
     image: Image.Image | None = None
     critiques: list[ImageCritique] = []
     iter_dir: Path | None = args.save_iterations
+    template = load_template(args.template) if args.template else None
+    copy_zone = args.copy_zone or (template.copy_zone if template else None)
 
     if iter_dir is not None:
         iter_dir.mkdir(parents=True, exist_ok=True)
@@ -110,7 +119,8 @@ def _iterate(args) -> tuple[Image.Image, str, list[ImageCritique]]:
             steps=args.steps,
             quality=args.quality,
             label=f"image-gen-{i + 1}",
-            copy_zone=args.copy_zone,
+            copy_zone=copy_zone,
+            template_directive=template.gen_directive if template else None,
         )
 
         if iter_dir is not None:
@@ -157,6 +167,9 @@ def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     usage_mod.reset()
 
+    template = load_template(args.template) if args.template else None
+    copy_zone = args.copy_zone or (template.copy_zone if template else None)
+
     image, final_prompt, critiques = _iterate(args)
 
     if args.save_raw:
@@ -165,7 +178,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"           raw image -> {args.save_raw}", file=sys.stderr)
 
     print("[place] asking Claude where to place the copy...", file=sys.stderr)
-    spec = decide_placement(image, args.copy, preferred_zone=args.copy_zone)
+    template_region = None
+    if template and "headline" in template.regions:
+        r = template.regions["headline"]
+        template_region = (r.x, r.y, r.w, r.h)
+    spec = decide_placement(
+        image,
+        args.copy,
+        preferred_zone=copy_zone,
+        template_hint=(template.placement_hint if template else None),
+        template_region=template_region,
+    )
     print(
         f"        region={spec.region} color={spec.text_color} "
         f"size={spec.font_size_pct:.1f}% align={spec.alignment} scrim={spec.needs_scrim}",
@@ -177,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         args.save_spec.write_text(json.dumps(spec.model_dump(), indent=2))
 
     print("[render] drawing text overlay...", file=sys.stderr)
-    final = render_overlay(image, args.copy, spec, font_path=args.font)
+    final = render_overlay(image, args.copy, spec, font_path=args.font, template=template)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     final.save(args.out)
     print(f"done -> {args.out}", file=sys.stderr)
