@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Generated outputs (regeneratable; large)
+out/
+
+# Local Claude Code config (machine-specific permissions)
+.claude/settings.local.json
+
+# Hugging Face / Torch caches if anyone points them here
+.cache/

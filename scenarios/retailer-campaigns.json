@@ -1,0 +1,72 @@
+[
+  {
+    "id": "back-to-school",
+    "theme": "Back to School",
+    "prompt": "A bright cheerful back-to-school scene featuring two diverse students aged 9 and 11 walking down a leafy suburban sidewalk wearing colorful backpacks, holding paper notebooks and freshly sharpened pencils, soft warm morning light, light autumn leaves on the ground, editorial lifestyle photography, sharp focus on the students, shallow depth of field, vibrant but natural color palette",
+    "copy": "Ready for what's next",
+    "copy_zone": "bottom"
+  },
+  {
+    "id": "black-friday",
+    "theme": "Black Friday Savings",
+    "prompt": "Dramatic high-contrast studio shot of premium retail products partially emerging from glossy black gift boxes, deep crimson and electric red rim lighting against a true-black backdrop, condensation and light flares for energy, premium e-commerce advertising photography, ultra-sharp product detail, cinematic mood",
+    "copy": "Up to 60% off everything",
+    "copy_zone": "top"
+  },
+  {
+    "id": "holiday-gifting",
+    "theme": "Holiday Gifting",
+    "prompt": "Overhead flatlay of beautifully wrapped Christmas gifts in matte forest-green and brushed-gold paper with satin ribbons, scattered pine sprigs and warm golden bokeh fairy lights in the soft-focus background, white marble surface, cozy magazine editorial styling, warm color grade, shot at indoor golden hour",
+    "copy": "Make their holiday unforgettable",
+    "copy_zone": "right"
+  },
+  {
+    "id": "spring-fashion",
+    "theme": "Spring Fashion Drop",
+    "prompt": "A young adult fashion model wearing a flowing pastel-yellow midi dress walking through a sunlit cherry-blossom grove at midday, soft pink petals drifting through the air, dreamy creamy bokeh background, fashion editorial photography, natural directional sunlight, airy vibrant color palette, full body in frame, both feet visible",
+    "copy": "New season. New you.",
+    "copy_zone": "right"
+  },
+  {
+    "id": "summer-essentials",
+    "theme": "Summer Essentials",
+    "prompt": "Overhead flatlay of summer beach essentials neatly arranged on bleached driftwood: a coral-and-cream striped beach towel, woven straw sun hat, retro tortoiseshell sunglasses, mineral sunscreen tube, dog-eared paperback novel, scattered seashells and a single hibiscus flower, vibrant midday sunlight, lifestyle product photography, crisp clean shadows",
+    "copy": "Sunshine, packed.",
+    "copy_zone": "top"
+  },
+  {
+    "id": "athleisure-wellness",
+    "theme": "Athleisure & Wellness",
+    "prompt": "Confident woman in modern sage-green athletic wear holding a tree pose on a quiet rooftop terrace at sunrise, hazy city skyline blurred behind her, soft golden warm light from the right, fitness lifestyle photography, dynamic but serene mood, full body in frame, feet planted firmly on a yoga mat, natural anatomy",
+    "copy": "Move your way",
+    "copy_zone": "bottom"
+  },
+  {
+    "id": "home-refresh",
+    "theme": "Home Refresh",
+    "prompt": "A perfectly made bed with crisp white linen sheets, layered cream and oatmeal throw pillows, a chunky knit throw at the foot, in a sunlit minimalist Scandinavian bedroom with pale oak floors, soft morning light streaming through sheer linen curtains, warm and inviting interior design photography, shallow depth of field on the foreground textures",
+    "copy": "Wake up better",
+    "copy_zone": "top"
+  },
+  {
+    "id": "beauty-skincare",
+    "theme": "Beauty & Skincare",
+    "prompt": "Clean minimalist product photography of three matte glass skincare bottles standing on a soft pink marble pedestal, gentle blush-and-cream gradient backdrop, diffused soft top light with subtle shadows, premium luxury beauty advertising aesthetic, fresh water droplets glistening on the bottle surfaces, sharp commercial focus",
+    "copy": "Skin that feels like you",
+    "copy_zone": "left"
+  },
+  {
+    "id": "mothers-day",
+    "theme": "Mother's Day",
+    "prompt": "A warm tender candid moment of a mother in her late thirties and her seven-year-old daughter sharing a hug in a sunlit summer garden, both wearing soft natural linen, candid lifestyle photography, golden hour back-light, shallow depth of field, emotional and authentic mood, natural anatomy, faces softly visible",
+    "copy": "For her, always.",
+    "copy_zone": "bottom"
+  },
+  {
+    "id": "sustainability",
+    "theme": "Sustainability Initiative",
+    "prompt": "A reusable kraft paper shopping bag standing upright in a wildflower meadow, brimming with fresh leafy produce and folded organic cotton tote bags, soft late-afternoon sunlight, eco-friendly lifestyle photography, earthy natural color palette, gentle shallow depth of field, no people in frame",
+    "copy": "Shop better. For the planet.",
+    "copy_zone": "top"
+  }
+]
