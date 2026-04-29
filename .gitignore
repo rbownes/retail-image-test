@@ -29,6 +29,10 @@ env/
 # Generated outputs (regeneratable; large)
 out/
 
+# Client brand assets (Frasers Group lockups/logos + commercially-licensed fonts)
+# Keep local; do not commit to a public repo.
+assets/
+
 # Local Claude Code config (machine-specific permissions)
 .claude/settings.local.json
 

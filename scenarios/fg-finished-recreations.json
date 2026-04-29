@@ -1,0 +1,88 @@
+[
+  {
+    "id": "fg-golf-flatlay",
+    "theme": "Golf Outlet flatlay (golf 1)",
+    "template": "value-slab",
+    "prompt": "A flatlay top-down photograph on bright manicured green grass: a black golf glove, three white golf balls, a golf scorecard, a black-and-yellow striped headcover, and a folded grey patterned polo shirt arranged in a clean composition. Bright midday sunlight, sharp focus, vivid greens, premium retail product photography. Reserve the center of the frame as visually quiet for a large white text overlay. No text in the image itself.",
+    "copy": "",
+    "lockup": {
+      "file": "sd-masters-gold-70off-lockup.png",
+      "region": {"x": 0.08, "y": 0.42, "w": 0.84, "h": 0.18},
+      "align": "center"
+    },
+    "logo": {
+      "file": "sports-direct.png",
+      "region": {"x": 0.78, "y": 0.04, "w": 0.18, "h": 0.10},
+      "align": "tr"
+    }
+  },
+  {
+    "id": "fg-golf-action",
+    "theme": "Golf Outlet golfer in motion (golf 2)",
+    "template": "athletic-diagonal",
+    "prompt": "A male amateur golfer photographed mid-swing on a sunlit fairway, follow-through pose with club extended high behind his head, wearing a white cap, white short-sleeved polo, and dark trousers, blurred green tree-line background, late-afternoon golden light, sharp focus on the golfer, dynamic professional sports photography. Reserve the upper-left half of the frame as visually quiet for a large white text overlay. No text in the image.",
+    "copy": "",
+    "lockup": {
+      "file": "sd-masters-gold-70off-lockup.png",
+      "region": {"x": 0.05, "y": 0.42, "w": 0.55, "h": 0.16},
+      "align": "lc"
+    },
+    "logo": {
+      "file": "sports-direct.png",
+      "region": {"x": 0.78, "y": 0.04, "w": 0.18, "h": 0.10},
+      "align": "tr"
+    }
+  },
+  {
+    "id": "fg-golf-starts-here",
+    "theme": "Golf Starts Here lockup variant",
+    "template": "value-slab",
+    "prompt": "A premium close-up product photograph of a single high-end golf driver club resting on lush green fairway grass, late-afternoon golden side-light, dramatic shadow, slight bokeh, sports retail photography, clean uncluttered composition. Reserve the upper third of the frame as visually quiet for a large white headline lockup. No text in the image.",
+    "copy": "",
+    "lockup": {
+      "file": "sd-golf-starts-here-white-lockup.png",
+      "region": {"x": 0.05, "y": 0.08, "w": 0.90, "h": 0.13},
+      "align": "center"
+    },
+    "logo": {
+      "file": "sports-direct.png",
+      "region": {"x": 0.04, "y": 0.86, "w": 0.18, "h": 0.10},
+      "align": "bl"
+    }
+  },
+  {
+    "id": "fg-rugby",
+    "theme": "Six Nations rugby jersey (rugby 1)",
+    "template": "value-slab",
+    "prompt": "A clean studio product photograph of an Ireland rugby jersey, deep emerald green with white collar and three small ribbons on the chest, displayed on a wooden coat hanger in front of a moody dark wood-panelled wall, warm directional spotlight, premium catalogue product photography, sharp detail. Reserve the upper third of the frame as visually quiet for a white headline lockup, and reserve the lower third as visually quiet for a logo. No text in the image.",
+    "copy": "",
+    "lockup": {
+      "file": "sd-golf-starts-here-white-lockup.png",
+      "region": {"x": 0.05, "y": 0.06, "w": 0.90, "h": 0.13},
+      "align": "center"
+    },
+    "logo": {
+      "file": "sports-direct.png",
+      "region": {"x": 0.36, "y": 0.84, "w": 0.28, "h": 0.12},
+      "align": "bc"
+    }
+  },
+  {
+    "id": "fg-mothers-day",
+    "theme": "Mother's Day gifting flatlay (MD 1)",
+    "template": "editorial-hush",
+    "prompt": "An overhead flatlay product photograph on a soft blush-pink seamless background, neatly arranged: a pair of pastel mint-and-lilac running shoes, a folded lilac yoga mat, a pink stainless steel water tumbler with a straw, a small lilac jewellery box, a dainty bracelet, and scattered lavender sprigs as styling. Soft diffused daylight, gentle shadows, premium beauty-style product photography. Reserve the upper third of the frame as visually quiet for a large dark serif headline. No text in the image.",
+    "copy": "",
+    "lockup": {
+      "file": "sd-masters-gold-70off-lockup.png",
+      "region": {"x": 0.10, "y": 0.06, "w": 0.80, "h": 0.16},
+      "align": "center",
+      "tint": "#5C2A3D"
+    },
+    "logo": {
+      "file": "sports-direct.png",
+      "region": {"x": 0.36, "y": 0.84, "w": 0.28, "h": 0.12},
+      "align": "bc"
+    }
+  }
+]

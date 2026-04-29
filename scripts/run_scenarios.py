@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from overlay import usage as usage_mod
+from overlay.compose import composite_logo, composite_lockup
 from overlay.critique import critique_image
 from overlay.generate import generate_image
 from overlay.placement import decide_placement
@@ -35,6 +36,7 @@ def _run_one(
     width: int,
     height: int,
     max_iterations: int,
+    reuse_raw: bool = False,
 ) -> dict:
     sid = scenario["id"]
     theme = scenario["theme"]
@@ -57,90 +59,125 @@ def _run_one(
     final_prompt = prompt
     iterations_used = 0
 
-    for i in range(max_iterations):
-        iterations_used = i + 1
-        print(f"  [gen {i + 1}/{max_iterations}] via {provider}")
+    raw_path = out_dir / "raw.png"
+    if reuse_raw and raw_path.exists():
+        print(f"  [reuse] loading existing raw.png (skipping generation + critique)")
+        from PIL import Image as _Image
+        image = _Image.open(raw_path).convert("RGB")
+        iterations_used = 0
+    else:
+        for i in range(max_iterations):
+            iterations_used = i + 1
+            print(f"  [gen {i + 1}/{max_iterations}] via {provider}")
+            try:
+                image = generate_image(
+                    prompt=final_prompt,
+                    provider=provider,
+                    width=width,
+                    height=height,
+                    quality=quality,
+                    label=f"{sid}-gen-{i + 1}",
+                    copy_zone=copy_zone,
+                    template_directive=template.gen_directive if template else None,
+                )
+            except Exception as e:
+                print(f"    !! generation failed: {type(e).__name__}: {e}")
+                return {
+                    "id": sid,
+                    "ok": False,
+                    "stage": "generate",
+                    "error": str(e),
+                    "elapsed": time.time() - started,
+                }
+
+            image.save(out_dir / f"iter-{i + 1:02d}.png")
+
+            if max_iterations <= 1 or i == max_iterations - 1:
+                break
+
+            print(f"  [critique {i + 1}]")
+            try:
+                critique = critique_image(image, final_prompt)
+            except Exception as e:
+                print(f"    !! critique failed: {type(e).__name__}: {e}; accepting current image")
+                break
+
+            (out_dir / f"iter-{i + 1:02d}-critique.json").write_text(
+                json.dumps(critique.model_dump(), indent=2)
+            )
+            print(f"    severity={critique.severity}  acceptable={critique.is_acceptable}")
+            if critique.issues:
+                for issue in critique.issues:
+                    print(f"      - {issue}")
+
+            if critique.is_acceptable or not critique.refined_prompt:
+                break
+
+            print(f"    refined prompt: {critique.refined_prompt}")
+            final_prompt = critique.refined_prompt
+
+        image.save(out_dir / "raw.png")
+
+    has_lockup = bool(scenario.get("lockup"))
+    spec = None
+    if not has_lockup:
+        print("  [place]")
+        template_region = None
+        if template and "headline" in template.regions:
+            r = template.regions["headline"]
+            template_region = (r.x, r.y, r.w, r.h)
         try:
-            image = generate_image(
-                prompt=final_prompt,
-                provider=provider,
-                width=width,
-                height=height,
-                quality=quality,
-                label=f"{sid}-gen-{i + 1}",
-                copy_zone=copy_zone,
-                template_directive=template.gen_directive if template else None,
+            spec = decide_placement(
+                image,
+                copy,
+                preferred_zone=copy_zone,
+                template_hint=(template.placement_hint if template else None),
+                template_region=template_region,
             )
         except Exception as e:
-            print(f"    !! generation failed: {type(e).__name__}: {e}")
+            print(f"    !! placement failed: {type(e).__name__}: {e}")
             return {
                 "id": sid,
                 "ok": False,
-                "stage": "generate",
+                "stage": "place",
                 "error": str(e),
                 "elapsed": time.time() - started,
             }
-
-        image.save(out_dir / f"iter-{i + 1:02d}.png")
-
-        if max_iterations <= 1 or i == max_iterations - 1:
-            break
-
-        print(f"  [critique {i + 1}]")
-        try:
-            critique = critique_image(image, final_prompt)
-        except Exception as e:
-            print(f"    !! critique failed: {type(e).__name__}: {e}; accepting current image")
-            break
-
-        (out_dir / f"iter-{i + 1:02d}-critique.json").write_text(
-            json.dumps(critique.model_dump(), indent=2)
+        (out_dir / "spec.json").write_text(json.dumps(spec.model_dump(), indent=2))
+        print(
+            f"    region={spec.region} color={spec.text_color} "
+            f"size={spec.font_size_pct:.1f}% align={spec.alignment} scrim={spec.needs_scrim}"
         )
-        print(f"    severity={critique.severity}  acceptable={critique.is_acceptable}")
-        if critique.issues:
-            for issue in critique.issues:
-                print(f"      - {issue}")
 
-        if critique.is_acceptable or not critique.refined_prompt:
-            break
+    lockup_cfg = scenario.get("lockup")
+    logo_cfg = scenario.get("logo")
 
-        print(f"    refined prompt: {critique.refined_prompt}")
-        final_prompt = critique.refined_prompt
-
-    image.save(out_dir / "raw.png")
-
-    print("  [place]")
-    template_region = None
-    if template and "headline" in template.regions:
-        r = template.regions["headline"]
-        template_region = (r.x, r.y, r.w, r.h)
-    try:
-        spec = decide_placement(
+    if lockup_cfg:
+        # When a lockup is supplied we skip the headline overlay — the lockup IS the headline.
+        print(f"  [compose] lockup -> {lockup_cfg.get('file')}")
+        final = composite_lockup(
             image,
-            copy,
-            preferred_zone=copy_zone,
-            template_hint=(template.placement_hint if template else None),
-            template_region=template_region,
+            lockup_cfg["file"],
+            lockup_cfg["region"],
+            align=lockup_cfg.get("align", "center"),
+            tint=lockup_cfg.get("tint"),
         )
-    except Exception as e:
-        print(f"    !! placement failed: {type(e).__name__}: {e}")
-        return {
-            "id": sid,
-            "ok": False,
-            "stage": "place",
-            "error": str(e),
-            "elapsed": time.time() - started,
-        }
-    (out_dir / "spec.json").write_text(json.dumps(spec.model_dump(), indent=2))
-    print(
-        f"    region={spec.region} color={spec.text_color} "
-        f"size={spec.font_size_pct:.1f}% align={spec.alignment} scrim={spec.needs_scrim}"
-    )
+    else:
+        print("  [render]")
+        final = render_overlay(image, copy, spec, template=template)
 
-    print("  [render]")
-    final = render_overlay(image, copy, spec, template=template)
+    if logo_cfg:
+        print(f"  [compose] logo   -> {logo_cfg.get('file')}")
+        final = composite_logo(
+            final,
+            logo_cfg["file"],
+            logo_cfg["region"],
+            align=logo_cfg.get("align", "center"),
+            tint=logo_cfg.get("tint"),
+        )
+
     final_path = out_dir / "final.png"
-    final.save(final_path)
+    final.convert("RGB").save(final_path)
     print(f"  done -> {final_path}")
 
     return {
@@ -163,6 +200,11 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=1024)
     ap.add_argument("--max-iterations", type=int, default=2)
     ap.add_argument("--only", default=None, help="comma-separated scenario ids")
+    ap.add_argument(
+        "--reuse-raw",
+        action="store_true",
+        help="If a scenario's out_dir already has raw.png, skip generation and critique and just re-run placement + composition. Free.",
+    )
     args = ap.parse_args()
 
     scenarios = json.loads(args.scenarios.read_text())
@@ -191,6 +233,7 @@ def main() -> int:
                 width=args.width,
                 height=args.height,
                 max_iterations=args.max_iterations,
+                reuse_raw=args.reuse_raw,
             )
         except KeyboardInterrupt:
             print("\ninterrupted; stopping batch", file=sys.stderr)
