@@ -1,6 +1,8 @@
 {
   "id": "streetwear-stack",
   "name": "Streetwear Stack",
+  "display_name": "Streetwear Youth",
+  "thumbnail": "out/scenarios/back-to-school/final.png",
   "brands": ["USC", "Sports Direct athleisure", "Jack Wills youth", "FIRETRAP", "Karrimor lifestyle"],
   "description": "Youth-oriented stacked-headline tile. Subject(s) middle row, multi-line headline upper-left, CTA pill bottom-right.",
   "regions": {

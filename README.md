@@ -1,158 +1,168 @@
-# overlay
+# CanvasKit
 
-Agentic campaign-image generator. Produces a finished retail creative from one prompt and one piece of copy:
+**Brief to brand-ready creative in under a minute** — an agentic retail
+creative platform for multi-brand groups. Pick a sub-brand, pick a layout,
+write a one-line brief. The system generates an image, critiques it for
+anatomy / composition / on-brand-ness, regenerates as needed, places the
+copy intelligently, and returns a publish-ready PNG with full cost
+accounting.
 
-1. **Generate** an image (local Stable Diffusion **or** OpenAI `gpt-image-1`).
-2. **Critique** it with Claude Opus 4.7 vision — flag anatomical/physical errors, rewrite the prompt, and regenerate up to N times.
-3. **Place** the copy with Claude Opus 4.7 — pick a region, color, size, alignment, and scrim that don't fight the subject.
-4. **Render** with Pillow — text-shape halo or full-width slab, drop-shadow, auto-wrap.
+## What's in the box
 
-A library of **brand-style layout templates** ships with the project (Sports Direct-style value slab, Flannels-style editorial hush, USC-style streetwear stack, athletic diagonal). Each template injects composition directives into the generator and pins the placement agent to a known region with a known type/scrim treatment — so every output in a campaign feels like the same campaign.
+* **Web app**: Gallery landing → brand kit selector → live generation with
+  per-iteration preview → downloadable PNG + spec + zipped campaign bundles.
+* **Campaign builder**: author multiple briefs, run them as one batch, get a
+  side-by-side grid plus a single zip.
+* **Brand kit library**: Sports Direct, Flannels, Frasers, USC — each a JSON
+  with palette, fonts, default layout, and a tone-of-voice note the AI
+  honours.
+* **Layout library**: 4 production-ready templates (Value Promo, Premium
+  Editorial, Streetwear Youth, Athletic Performance), each with composition
+  directives baked into the generator and a known copy zone.
+* **Cost-aware**: every job estimates spend before running, displays running
+  cost while generating, and supports a hard USD cap that stops the loop
+  cleanly.
 
-## Setup
+## What it does
 
-```bash
-uv venv --python 3.13 .venv          # or python -m venv .venv
-uv pip install --python .venv/bin/python -e .
-
-export ANTHROPIC_API_KEY=sk-ant-...   # required (placement + critique agents)
-export OPENAI_API_KEY=sk-proj-...     # required only if --provider openai
+```
+brief + brand kit + layout
+        │
+        ▼
+   generate ──┐
+        │     │   not on-brand?
+        │     └────────────────┐
+        ▼                      │
+    critique ─── refined prompt┘
+        │ on-brand
+        ▼
+    place copy
+        │
+        ▼
+     render ── final.png + spec.json
 ```
 
-First local run downloads SDXL-Turbo weights (~6.9 GB) into the HuggingFace cache. Subsequent runs are ~30s on Apple Silicon (MPS).
+Every step is observable in the UI — you see each iteration as the system
+critiques it, and you can stop or regenerate at any point.
 
-## Quick start (one creative)
+## Quick start — Docker (recommended for teammates)
+
+The fastest way to share this with the team. Requires Docker Desktop only;
+no Python, no Node, no `.venv` to manage.
+
+```bash
+cp .env.example .env
+# edit .env: set ANTHROPIC_API_KEY and OPENAI_API_KEY
+
+docker compose up --build
+# open http://localhost:3000
+```
+
+First build pulls Python + Node base images and takes 3–5 minutes. Subsequent
+runs start in seconds. Per-job artifacts persist in a docker-managed volume
+(`canvaskit_jobs`).
+
+To stop: `docker compose down`. To wipe per-job outputs: `docker compose down -v`.
+
+## Quick start — local dev (Python + Node)
+
+Requires Python 3.10+, Node 18+, an Anthropic API key, and (for the recommended
+provider) an OpenAI API key.
+
+```bash
+# 1. Install Python deps + the backend
+uv pip install --python .venv/bin/python -e ".[backend]"
+
+# Optional: add local Stable Diffusion (~3 GB of torch/diffusers/transformers).
+uv pip install --python .venv/bin/python -e ".[local]"
+
+# 2. Install frontend deps
+cd frontend && npm install && cd ..
+
+# 3. Configure keys
+cp backend/.env.example backend/.env
+# edit backend/.env to add ANTHROPIC_API_KEY and OPENAI_API_KEY
+
+# 4. Run the stack (two terminals)
+.venv/bin/uvicorn backend.app.main:app --port 8000
+cd frontend && npm run dev   # then open http://localhost:3000
+```
+
+Open <http://localhost:3000>. The gallery shows 10 finished campaign
+creatives that were produced by the same pipeline (total cost ~$0.75). Click
+**+ New creative** to make one yourself.
+
+## Demo material
+
+`out/scenarios/` ships with 10 finished campaign creatives across four
+brand layouts: Back to School, Black Friday, Holiday Gifting, Spring Fashion,
+Summer Essentials, Athleisure, Home Refresh, Beauty, Mother's Day, Sustainability.
+These power the landing-page gallery — your stakeholders see polished
+output the moment they load the page.
+
+## Architecture
+
+* `overlay/` — the Python pipeline (generate, critique, place, render).
+  Importable as a library; runnable via `python -m overlay` for one-shot
+  CLI use.
+* `backend/` — FastAPI app wrapping the pipeline as a job-based HTTP API
+  with Server-Sent Events for live progress. See
+  [backend/README.md](backend/README.md).
+* `frontend/` — Next.js 16 (App Router, TypeScript, Tailwind v4) UI. See
+  [frontend/README.md](frontend/README.md).
+* `brand_kits/` — drop-in JSON per sub-brand: palette, fonts, default layout.
+* `overlay/templates/` — drop-in JSON per layout: composition directive,
+  copy zone, typography rules.
+* `assets/` — logos, lockups, brand fonts.
+
+Adding a new sub-brand = one JSON in `brand_kits/`. Adding a new layout =
+one JSON in `overlay/templates/`. No code changes.
+
+## Portability notes
+
+* **Docker images are slim**: backend ~250 MB (Pillow + FastAPI + Pydantic),
+  frontend ~150 MB (Next.js standalone). Total under 500 MB.
+* **OpenAI-only by default**: the docker image does not bundle PyTorch
+  (`overlay/generate.py` lazy-imports it). Local Stable Diffusion still works
+  for native installs via `pip install -e ".[local]"`.
+* **No external state**: in-memory job store. Restarting the backend container
+  loses in-flight jobs but keeps completed artifacts (volume-mounted).
+* **Single-machine**: this is a laptop / on-prem demo setup. To deploy for
+  many users, swap the in-memory store for Redis, put auth in front, and
+  bump compose to a real orchestrator.
+
+## Costs
+
+The UI shows an estimate before every run and tracks running cost during.
+Typical per-image cost on `gpt-image-1` medium + Claude Opus 4.7:
+
+| Stage | Cost |
+|---|---|
+| Image generation (one iteration) | ~$0.042 |
+| Critique (per iteration after the first) | ~$0.018 |
+| Placement | ~$0.018 |
+
+A typical single creative lands around **$0.08**; a 5-iteration worst case
+around **$0.30**. Set a hard cap in the UI to guarantee it.
+
+## CLI (for developers)
+
+The original CLI still works for one-shot scripted use:
 
 ```bash
 .venv/bin/python -m overlay \
   --provider openai --quality medium \
   --template value-slab \
   --max-iterations 2 \
-  --prompt "Dramatic studio shot of premium retail products partially emerging from glossy black gift boxes, deep crimson and electric red rim lighting, true-black backdrop" \
+  --prompt "Dramatic studio shot of premium retail products..." \
   --copy "Up to 60% off everything" \
   --out out/black-friday.png
 ```
 
-### CLI flags
-
-| Flag | Default | Notes |
-|---|---|---|
-| `--prompt` | required | Image-generation prompt |
-| `--copy` | required | Text to overlay |
-| `--out` | required | Output PNG path |
-| `--provider` | `local` | `local` (Stable Diffusion via diffusers) or `openai` (`gpt-image-1`) |
-| `--model` | provider default | `stabilityai/sdxl-turbo` for local, `gpt-image-1` for openai |
-| `--quality` | `medium` | OpenAI quality: `low` / `medium` / `high` / `auto` |
-| `--steps` | 4 | Diffusion steps (local only) |
-| `--width` / `--height` | 1024 | Output dimensions (snapped for OpenAI) |
-| `--seed` | random | Reproducible local generation |
-| `--max-iterations` | 5 | Critique loop cap; agent stops earlier if image is acceptable |
-| `--template` | none | Brand layout: `value-slab`, `editorial-hush`, `streetwear-stack`, `athletic-diagonal` |
-| `--copy-zone` | none | Manual reserved zone (`top` / `bottom` / `left` / `right` / corners) |
-| `--font` | packaged Inter-Bold | Path to a TTF/OTF font |
-| `--save-iterations` | — | Directory: dump every iteration's image and critique |
-| `--save-spec` | — | Dump the placement spec JSON |
-| `--save-raw` | — | Save the pre-overlay image |
-
-## Batch mode (campaign scenarios)
-
-Drop a JSON list of scenarios into [scenarios/](scenarios/). Each row needs `id`, `theme`, `template`, `prompt`, `copy`. Run:
-
-```bash
-.venv/bin/python scripts/run_scenarios.py \
-  --provider openai --quality medium --max-iterations 2 \
-  --out out/scenarios
-```
-
-Outputs land in `out/scenarios/<id>/` (`raw.png`, `final.png`, `spec.json`, per-iteration images and critiques) plus a top-level `summary.json` with full per-call usage and total cost.
-
-The shipped [scenarios/retailer-campaigns.json](scenarios/retailer-campaigns.json) covers ten Frasers Group-style campaigns (Back to School, Black Friday, Holiday Gifting, Spring Fashion, Summer Essentials, Athleisure, Home Refresh, Beauty, Mother's Day, Sustainability), each mapped to one of the four brand templates.
-
-## Templates
-
-Templates live in [overlay/templates/](overlay/templates/) as JSON. Each defines:
-
-- `regions` — normalized (0–1) rects for `subject`, `headline`, `wordmark`, `accent`
-- `gen_directive` — text appended to the gen prompt to bake composition rules into the image
-- `placement_hint` — instruction passed to Claude with the headline rect as a hard hint
-- `typography` — alignment, font-size %, color, and **scrim shape**: `halo` (text-shape glow), `full-band` (solid color band), `rounded-block` (legacy rectangle)
-
-| Template | Brand vibe | Subject | Copy region | Scrim |
-|---|---|---|---|---|
-| `value-slab` | Sports Direct, Lonsdale, Studio | Center-right, bleeding | Full-width bottom band | Solid navy `full-band` |
-| `editorial-hush` | Flannels, Frasers, HoF premium | Vertical center, lots of empty space | Small bottom-right | None |
-| `streetwear-stack` | USC, Jack Wills youth, FIRETRAP | Middle row, knee-cropped | Stacked upper-left | Light halo |
-| `athletic-diagonal` | Slazenger, Karrimor, Everlast | Diagonal bottom-left → top-right | Bottom-left, all-caps | Moderate halo |
-
-Add a new template by dropping `overlay/templates/<id>.json` (Pydantic-validated on load) — no code changes needed.
-
-## Costs
-
-Per run, with Opus 4.7 placement + critique:
-
-| Stage | Tokens / unit | Cost |
-|---|---|---|
-| Placement | ~2.7K in / ~150 out | ~$0.018 |
-| Critique (each iteration) | ~2.7K in / ~150 out | ~$0.018 |
-| Image gen — local SDXL-Turbo | — | $0 |
-| Image gen — `gpt-image-1` medium 1024² | flat per image | ~$0.042 |
-
-Worst case for one creative with `--max-iterations 5` on OpenAI: ~$0.30. Typical: ~$0.10. The pipeline tracks per-call usage and emits a summary at the end.
-
-## How it works
-
-```
-prompt + copy + template
-        │
-        ▼
-┌─────────────────┐  text directive    ┌────────────────┐
-│  generate.py    │ ──────────────────▶│  SDXL  /  GPT  │
-│  (provider sw)  │                    │  image-1       │
-└────────┬────────┘                    └───────┬────────┘
-         │                                     │
-         │              image                  │
-         ▼                                     │
-┌─────────────────┐  Claude Opus 4.7   ┌──────▼──────────┐
-│  critique.py    │ ──── vision ─────▶ │  ImageCritique  │
-│  (loop ≤N)      │                    │  + refined      │
-└────────┬────────┘                    │    prompt       │
-   acceptable?                         └─────────────────┘
-         │                                     │ no →
-         │ yes                                 └─→ regenerate
-         ▼
-┌─────────────────┐  Claude Opus 4.7   ┌─────────────────┐
-│  placement.py   │ ──── vision ─────▶ │  PlacementSpec  │
-│  (template hint)│                    │  region, color, │
-└────────┬────────┘                    │  size, scrim    │
-         │                             └─────────────────┘
-         ▼
-┌─────────────────┐
-│  render.py      │  Pillow: word-wrap, halo / full-band scrim, drop-shadow
-└────────┬────────┘
-         ▼
-     final.png
-```
-
-## Project layout
-
-```
-overlay/
-├── __init__.py        # public API
-├── __main__.py        # python -m overlay → cli.main
-├── cli.py             # argparse + orchestration
-├── generate.py        # SD / OpenAI dispatch, prompt augmentation
-├── critique.py        # Claude vision agent: ImageCritique
-├── placement.py       # Claude vision agent: PlacementSpec
-├── render.py          # Pillow rendering, scrim shapes
-├── usage.py           # cross-call usage + cost log
-├── fonts/             # packaged Inter-Bold.otf
-└── templates/         # brand layout JSONs (Pydantic-loaded)
-
-scenarios/             # batch JSON
-scripts/
-└── run_scenarios.py   # batch runner
-```
+See `python -m overlay --help` for all flags. Batch CLI:
+`python scripts/run_scenarios.py --provider openai`.
 
 ## License
 
-Inter font (`overlay/fonts/Inter-Bold.otf`) is distributed under the SIL Open Font License v1.1 — see https://rsms.me/inter/.
+Inter font (`overlay/fonts/Inter-Bold.otf`) is distributed under the SIL
+Open Font License v1.1 — see <https://rsms.me/inter/>.

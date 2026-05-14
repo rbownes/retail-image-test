@@ -41,7 +41,20 @@ _PIPELINE_KEY: tuple | None = None
 _OPENAI_SIZES = [(1024, 1024), (1024, 1536), (1536, 1024)]
 
 
+def _require_local_deps():
+    try:
+        import torch  # noqa: F401
+        import diffusers  # noqa: F401
+    except ImportError as e:
+        raise RuntimeError(
+            "Local Stable Diffusion provider requires the [local] extras. "
+            "Install with: `uv pip install --python .venv/bin/python -e '.[local]'` "
+            "(adds ~3 GB of torch/diffusers). For OpenAI-only deployments, use `--provider openai`."
+        ) from e
+
+
 def _device_and_dtype():
+    _require_local_deps()
     import torch
 
     if torch.backends.mps.is_available():
@@ -53,6 +66,7 @@ def _device_and_dtype():
 
 def _get_pipeline(model_id: str):
     global _PIPELINE, _PIPELINE_KEY
+    _require_local_deps()
     from diffusers import AutoPipelineForText2Image
 
     device, dtype = _device_and_dtype()

@@ -1,0 +1,15 @@
+{
+  "id": "sports-direct",
+  "name": "Sports Direct",
+  "tagline": "Sport for everyone",
+  "tone": "High-energy mass-market value retail. Loud, confident, price-led.",
+  "primary": "#0C2461",
+  "secondary": "#FFE800",
+  "accent": "#E60023",
+  "text_on_primary": "#FFFFFF",
+  "logo": "assets/logos/sports-direct.png",
+  "font_display": "assets/fonts/sports-direct/GT-America-Extended-Black-Italic.otf",
+  "font_body": "assets/fonts/sports-direct/GT-America-Standard-Regular.otf",
+  "default_template": "value-slab",
+  "supported_templates": ["value-slab", "athletic-diagonal", "streetwear-stack"]
+}

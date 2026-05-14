@@ -1,6 +1,8 @@
 {
   "id": "athletic-diagonal",
   "name": "Athletic Diagonal",
+  "display_name": "Athletic Performance",
+  "thumbnail": "out/scenarios/athleisure-wellness/final.png",
   "brands": ["Slazenger", "Karrimor technical", "Everlast", "USC Pro", "Evans Cycles performance"],
   "description": "Performance hero. Athlete in motion cuts diagonally bottom-left to top-right. Headline anchored bottom-left, brand wordmark top-left, optional product callout bottom-right.",
   "regions": {

@@ -1,6 +1,8 @@
 {
   "id": "editorial-hush",
   "name": "Editorial Hush",
+  "display_name": "Premium Editorial",
+  "thumbnail": "out/scenarios/holiday-gifting/final.png",
   "brands": ["Flannels", "Frasers", "House of Fraser premium", "Jack Wills heritage"],
   "description": "Luxury editorial. Single subject vertical center, generous negative space, small wordmark, optional small headline bottom-right.",
   "regions": {

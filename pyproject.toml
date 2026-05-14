@@ -3,28 +3,50 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "overlay"
-version = "0.1.0"
-description = "Agentic image generation + smart text overlay"
+name = "canvaskit"
+version = "0.2.0"
+description = "Agentic retail creative generator — pipeline, CLI, and FastAPI backend."
 requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.92.0",
     "openai>=1.50",
     "pydantic>=2.0",
     "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+# Local Stable Diffusion provider (heavy: ~3 GB of torch + diffusers + transformers).
+# Skip this for OpenAI-only deployments — the docker image stays slim.
+local = [
     "diffusers>=0.30",
     "torch>=2.2",
     "transformers>=4.40",
     "accelerate>=0.30",
     "safetensors>=0.4",
 ]
+backend = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+]
+all = [
+    "diffusers>=0.30",
+    "torch>=2.2",
+    "transformers>=4.40",
+    "accelerate>=0.30",
+    "safetensors>=0.4",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+]
 
 [project.scripts]
 overlay = "overlay.cli:main"
+canvaskit-backend = "backend.app.main:app"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["overlay*"]
+include = ["overlay*", "backend*"]
 
 [tool.setuptools.package-data]
 overlay = ["fonts/*.ttf", "fonts/*.otf", "templates/*.json"]

@@ -1,0 +1,51 @@
+# CanvasKit — local-portable two-service stack.
+# Usage:
+#   cp .env.example .env       # fill in ANTHROPIC_API_KEY + OPENAI_API_KEY
+#   docker compose up --build
+#
+# Open http://localhost:3000
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: canvaskit-backend:latest
+    container_name: canvaskit-backend
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY required in .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAX_COST_USD_PER_JOB: ${MAX_COST_USD_PER_JOB:-2.00}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://localhost:3000}
+      PRODUCT_NAME: ${PRODUCT_NAME:-CanvasKit}
+      PRODUCT_TAGLINE: ${PRODUCT_TAGLINE:-Brief to brand-ready creative in under a minute.}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Per-job artifacts persist across container restarts.
+      - canvaskit_jobs:/app/out/jobs
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}
+        NEXT_PUBLIC_PRODUCT_NAME: ${PRODUCT_NAME:-CanvasKit}
+        NEXT_PUBLIC_PRODUCT_TAGLINE: ${PRODUCT_TAGLINE:-Brief to brand-ready creative in under a minute.}
+    image: canvaskit-frontend:latest
+    container_name: canvaskit-frontend
+    environment:
+      # Server-side rendering inside the container hits the backend over the
+      # internal docker network. The browser still uses NEXT_PUBLIC_BACKEND_URL.
+      BACKEND_URL_SERVER: http://backend:8000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  canvaskit_jobs:

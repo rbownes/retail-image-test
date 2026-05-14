@@ -1,6 +1,8 @@
 {
   "id": "value-slab",
   "name": "Value Slab",
+  "display_name": "Value Promo",
+  "thumbnail": "out/scenarios/black-friday/final.png",
   "brands": ["Sports Direct", "Lonsdale", "Slazenger value", "Studio"],
   "description": "High-energy mass-market promo. Subject right of center, full-width headline slab at bottom, wordmark top-right, optional price flash top-left.",
   "regions": {

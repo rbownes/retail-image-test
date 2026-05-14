@@ -5,13 +5,8 @@ import json
 import sys
 from pathlib import Path
 
-from PIL import Image
-
 from overlay import usage as usage_mod
-from overlay.critique import ImageCritique, critique_image
-from overlay.generate import generate_image
-from overlay.placement import decide_placement
-from overlay.render import render_overlay
+from overlay.pipeline import iterate_events
 from overlay.templates import load_template, template_ids
 
 
@@ -67,6 +62,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Max image-generation rounds; the agent critiques each and rewrites the prompt until acceptable. Set to 1 to skip critique.",
     )
     p.add_argument(
+        "--cost-cap",
+        type=float,
+        default=None,
+        help="Hard cost ceiling in USD; pipeline stops between iterations if exceeded.",
+    )
+    p.add_argument(
         "--save-spec",
         type=Path,
         default=None,
@@ -87,129 +88,118 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def _bumpseed(seed: int | None, i: int) -> int | None:
-    if seed is None:
-        return None
-    return seed + i * 7919
-
-
-def _iterate(args) -> tuple[Image.Image, str, list[ImageCritique]]:
-    prompt = args.prompt
-    image: Image.Image | None = None
-    critiques: list[ImageCritique] = []
-    iter_dir: Path | None = args.save_iterations
-    template = load_template(args.template) if args.template else None
-    copy_zone = args.copy_zone or (template.copy_zone if template else None)
-
-    if iter_dir is not None:
-        iter_dir.mkdir(parents=True, exist_ok=True)
-
-    for i in range(args.max_iterations):
-        print(
-            f"[gen {i + 1}/{args.max_iterations}] generating via {args.provider} ({args.width}x{args.height})...",
-            file=sys.stderr,
-        )
-        image = generate_image(
-            prompt=prompt,
-            provider=args.provider,
-            width=args.width,
-            height=args.height,
-            seed=_bumpseed(args.seed, i),
-            model=args.model,
-            steps=args.steps,
-            quality=args.quality,
-            label=f"image-gen-{i + 1}",
-            copy_zone=copy_zone,
-            template_directive=template.gen_directive if template else None,
-        )
-
-        if iter_dir is not None:
-            image.save(iter_dir / f"iter-{i + 1:02d}.png")
-
-        if args.max_iterations <= 1 or i == args.max_iterations - 1:
-            return image, prompt, critiques
-
-        print(f"[critique {i + 1}] reviewing for impossibilities...", file=sys.stderr)
-        try:
-            critique = critique_image(image, prompt)
-        except Exception as e:
-            print(f"           critique failed ({type(e).__name__}: {e}); accepting current image.", file=sys.stderr)
-            return image, prompt, critiques
-        critiques.append(critique)
-        print(
-            f"           severity={critique.severity} "
-            f"acceptable={critique.is_acceptable} "
-            f"issues={critique.issues}",
-            file=sys.stderr,
-        )
-
-        if iter_dir is not None:
-            (iter_dir / f"iter-{i + 1:02d}-critique.json").write_text(
-                json.dumps(critique.model_dump(), indent=2)
-            )
-
-        if critique.is_acceptable:
-            print("           accepted — stopping iteration.", file=sys.stderr)
-            return image, prompt, critiques
-
-        if not critique.refined_prompt:
-            print("           no refined prompt returned — stopping iteration.", file=sys.stderr)
-            return image, prompt, critiques
-
-        print(f"           refined prompt: {critique.refined_prompt}", file=sys.stderr)
-        prompt = critique.refined_prompt
-
-    assert image is not None
-    return image, prompt, critiques
-
-
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     usage_mod.reset()
 
     template = load_template(args.template) if args.template else None
-    copy_zone = args.copy_zone or (template.copy_zone if template else None)
+    iter_dir: Path | None = args.save_iterations
+    if iter_dir is not None:
+        iter_dir.mkdir(parents=True, exist_ok=True)
 
-    image, final_prompt, critiques = _iterate(args)
+    final = None
+    raw = None
+    spec = None
+    final_prompt = args.prompt
+    exit_code = 0
 
-    if args.save_raw:
-        args.save_raw.parent.mkdir(parents=True, exist_ok=True)
-        image.save(args.save_raw)
-        print(f"           raw image -> {args.save_raw}", file=sys.stderr)
-
-    print("[place] asking Claude where to place the copy...", file=sys.stderr)
-    template_region = None
-    if template and "headline" in template.regions:
-        r = template.regions["headline"]
-        template_region = (r.x, r.y, r.w, r.h)
-    spec = decide_placement(
-        image,
-        args.copy,
-        preferred_zone=copy_zone,
-        template_hint=(template.placement_hint if template else None),
-        template_region=template_region,
+    events = iterate_events(
+        prompt=args.prompt,
+        copy=args.copy,
+        template=template,
+        copy_zone=args.copy_zone,
+        provider=args.provider,
+        model=args.model,
+        width=args.width,
+        height=args.height,
+        seed=args.seed,
+        steps=args.steps,
+        quality=args.quality,
+        max_iterations=args.max_iterations,
+        font_path=args.font,
+        cost_cap_usd=args.cost_cap,
     )
-    print(
-        f"        region={spec.region} color={spec.text_color} "
-        f"size={spec.font_size_pct:.1f}% align={spec.alignment} scrim={spec.needs_scrim}",
-        file=sys.stderr,
-    )
-    print(f"        reasoning: {spec.reasoning}", file=sys.stderr)
-    if args.save_spec:
-        args.save_spec.parent.mkdir(parents=True, exist_ok=True)
-        args.save_spec.write_text(json.dumps(spec.model_dump(), indent=2))
 
-    print("[render] drawing text overlay...", file=sys.stderr)
-    final = render_overlay(image, args.copy, spec, font_path=args.font, template=template)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    final.save(args.out)
-    print(f"done -> {args.out}", file=sys.stderr)
+    for event in events:
+        kind = event["type"]
+        if kind == "gen_start":
+            print(
+                f"[gen {event['iteration']}/{event['max']}] generating via {args.provider} ({args.width}x{args.height})...",
+                file=sys.stderr,
+            )
+        elif kind == "gen_done":
+            if iter_dir is not None:
+                event["image"].save(iter_dir / f"iter-{event['iteration']:02d}.png")
+        elif kind == "critique_start":
+            print(f"[critique {event['iteration']}] reviewing for impossibilities...", file=sys.stderr)
+        elif kind == "critique_done":
+            c = event["critique"]
+            print(
+                f"           severity={c.severity} acceptable={c.is_acceptable} issues={c.issues}",
+                file=sys.stderr,
+            )
+            if iter_dir is not None:
+                (iter_dir / f"iter-{event['iteration']:02d}-critique.json").write_text(
+                    json.dumps(c.model_dump(), indent=2)
+                )
+            if c.is_acceptable:
+                print("           accepted — stopping iteration.", file=sys.stderr)
+            elif not c.refined_prompt:
+                print("           no refined prompt returned — stopping iteration.", file=sys.stderr)
+            else:
+                print(f"           refined prompt: {c.refined_prompt}", file=sys.stderr)
+        elif kind == "critique_failed":
+            print(
+                f"           critique failed ({event['message']}); accepting current image.",
+                file=sys.stderr,
+            )
+        elif kind == "max_iterations_reached":
+            print(f"[warn] {event['warning']}", file=sys.stderr)
+        elif kind == "placement_start":
+            print("[place] asking Claude where to place the copy...", file=sys.stderr)
+        elif kind == "placement_done":
+            spec = event["spec"]
+            raw = event["image"]
+            if args.save_raw:
+                args.save_raw.parent.mkdir(parents=True, exist_ok=True)
+                raw.save(args.save_raw)
+                print(f"           raw image -> {args.save_raw}", file=sys.stderr)
+            print(
+                f"        region={spec.region} color={spec.text_color} "
+                f"size={spec.font_size_pct:.1f}% align={spec.alignment} scrim={spec.needs_scrim}",
+                file=sys.stderr,
+            )
+            print(f"        reasoning: {spec.reasoning}", file=sys.stderr)
+            if args.save_spec:
+                args.save_spec.parent.mkdir(parents=True, exist_ok=True)
+                args.save_spec.write_text(json.dumps(spec.model_dump(), indent=2))
+            print("[render] drawing text overlay...", file=sys.stderr)
+        elif kind == "render_done":
+            final = event["final"]
+            final_prompt = event["final_prompt"]
+        elif kind == "cost_cap_hit":
+            print(
+                f"[stop] cost cap ${event['cap']:.4f} reached at ${event['cost_so_far']:.4f} after iteration {event['iteration']}.",
+                file=sys.stderr,
+            )
+            exit_code = 2
+        elif kind == "cancelled":
+            print(f"[stop] cancelled at iteration {event['iteration']}.", file=sys.stderr)
+            exit_code = 2
+        elif kind == "error":
+            print(
+                f"[error] stage={event['stage']} {event['exception_type']}: {event['message']}",
+                file=sys.stderr,
+            )
+            exit_code = 1
+
+    if final is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        final.save(args.out)
+        print(f"done -> {args.out}", file=sys.stderr)
 
     print("\n[usage]", file=sys.stderr)
     for line in usage_mod.summary_lines():
         print(line, file=sys.stderr)
-    print(
-        f"\nfinal prompt used: {final_prompt}",
-        file=sys.stderr,
-    )
-    return 0
+    print(f"\nfinal prompt used: {final_prompt}", file=sys.stderr)
+    return exit_code

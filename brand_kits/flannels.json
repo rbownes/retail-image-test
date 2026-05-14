@@ -1,0 +1,15 @@
+{
+  "id": "flannels",
+  "name": "Flannels",
+  "tagline": "The luxury edit",
+  "tone": "Quiet luxury, editorial restraint, generous negative space.",
+  "primary": "#1A1A1A",
+  "secondary": "#F2EDE5",
+  "accent": "#8C7A5C",
+  "text_on_primary": "#F2EDE5",
+  "logo": "assets/logos/flannels-outline.png",
+  "font_display": "assets/fonts/flannels/RomainHeadline-Regular.otf",
+  "font_body": "assets/fonts/flannels/Avenir.ttc",
+  "default_template": "editorial-hush",
+  "supported_templates": ["editorial-hush"]
+}

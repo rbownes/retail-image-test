@@ -1,0 +1,15 @@
+{
+  "id": "usc",
+  "name": "USC",
+  "tagline": "The latest in streetwear",
+  "tone": "Youth streetwear. Casual, anti-corporate, slightly grainy, confident.",
+  "primary": "#111111",
+  "secondary": "#F5F1E8",
+  "accent": "#D94F2A",
+  "text_on_primary": "#F5F1E8",
+  "logo": "assets/logos/sports-direct.png",
+  "font_display": "assets/fonts/sports-direct/GT-America-Extended-Bold-Italic.otf",
+  "font_body": "assets/fonts/sports-direct/GT-America-Standard-Regular.otf",
+  "default_template": "streetwear-stack",
+  "supported_templates": ["streetwear-stack", "athletic-diagonal"]
+}

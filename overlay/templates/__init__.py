@@ -32,6 +32,8 @@ class Typography(BaseModel):
 class Template(BaseModel):
     id: str
     name: str
+    display_name: str | None = None
+    thumbnail: str | None = None
     brands: list[str] = Field(default_factory=list)
     description: str = ""
     regions: dict[str, Region] = Field(default_factory=dict)

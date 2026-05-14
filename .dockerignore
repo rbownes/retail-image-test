@@ -1,0 +1,36 @@
+# Repo-wide build context filter — applied to both backend and frontend builds.
+.git
+.gitignore
+.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# Frontend artifacts (handled by frontend build stage separately)
+frontend/node_modules
+frontend/.next
+frontend/.turbo
+frontend/out
+
+# Test / archive outputs
+out/_archive
+out/jobs
+
+# Mac noise
+**/.DS_Store
+
+# Editor / IDE noise
+.idea
+.vscode
+.claude
+
+# Local secrets
+**/.env
+**/.env.local
+backend/.env
+
+# Docs artifacts and CI noise
+*.zip
+docker-compose*.override.yml

@@ -1,0 +1,15 @@
+{
+  "id": "frasers",
+  "name": "Frasers",
+  "tagline": "The home of premium",
+  "tone": "Premium department-store heritage. Refined, considered, with a contemporary edge.",
+  "primary": "#0A0A0A",
+  "secondary": "#FFFFFF",
+  "accent": "#B89968",
+  "text_on_primary": "#FFFFFF",
+  "logo": "assets/logos/frasers-solid.png",
+  "font_display": "assets/fonts/frasers/ABCWhyteInktrap-Light.otf",
+  "font_body": "assets/fonts/frasers/ABCWhyteInktrap-Light.otf",
+  "default_template": "editorial-hush",
+  "supported_templates": ["editorial-hush", "value-slab"]
+}
